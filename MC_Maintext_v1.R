@@ -12,22 +12,22 @@ library(ggtext)
 library(ggpubr)
 
 #### 0.1 convert AQM results to county level results ####
-resultsInMAP_ref <- read.csv("~/Documents/PSU/2023 Spring/ModelsComparison/resultsInMAP_ref.csv", stringsAsFactors = F)
-resultsInMAP_ref50 <- read.csv("~/Documents/PSU/2023 Spring/ModelsComparison/resultsInMAP_ref50.csv", stringsAsFactors = F)
-resultsInMAP_nz <- read.csv("~/Documents/PSU/2023 Spring/ModelsComparison/resultsInMAP_nz.csv", stringsAsFactors = F)
-resultsInMAP_race2 <- read.csv("~/Documents/PSU/2023 Spring/ModelsComparison/NZ_2050_race2_pm2p5.csv", stringsAsFactors = F)
-resultsISRM_ref <- read.csv("~/Documents/PSU/2023 Spring/ModelsComparison/resultsISRM_ref.csv", stringsAsFactors = F)
-resultsISRM_ref50 <- read.csv("~/Documents/PSU/2023 Spring/ModelsComparison/resultsISRM_ref50.csv", stringsAsFactors = F)
-resultsISRM_nz <- read.csv("~/Documents/PSU/2023 Spring/ModelsComparison/resultsISRM_nz.csv", stringsAsFactors = F)
-resultsISRM_race2 <- read.csv("~/Documents/PSU/2023 Spring/ModelsComparison/ISRM_NZ_2050_race2_pm2p5.csv", stringsAsFactors = F)
+resultsInMAP_ref <- read.csv("./AirQualityResults/resultsInMAP_ref.csv", stringsAsFactors = F)
+resultsInMAP_ref50 <- read.csv("./AirQualityResults/resultsInMAP_ref50.csv", stringsAsFactors = F)
+resultsInMAP_nz <- read.csv("./AirQualityResults/resultsInMAP_nz.csv", stringsAsFactors = F)
+resultsInMAP_race2 <- read.csv("./AirQualityResults/NZ_2050_race2_pm2p5.csv", stringsAsFactors = F)
+resultsISRM_ref <- read.csv("./AirQualityResults/resultsISRM_ref.csv", stringsAsFactors = F)
+resultsISRM_ref50 <- read.csv("./AirQualityResults/resultsISRM_ref50.csv", stringsAsFactors = F)
+resultsISRM_nz <- read.csv("./AirQualityResults/resultsISRM_nz.csv", stringsAsFactors = F)
+resultsISRM_race2 <- read.csv("./AirQualityResults/ISRM_NZ_2050_race2_pm2p5.csv", stringsAsFactors = F)
 
-county_shp <- readOGR(dsn = "~/Documents/PSU/2023 Spring/ModelsComparison/tl_2021_us_county/tl_2021_us_county.shp")
+county_shp <- readOGR(dsn = "./AirQualityResults/tl_2021_us_county/tl_2021_us_county.shp")
 county_shp_sf <- st_as_sf(county_shp)
-state_shp <- readOGR(dsn = "~/Documents/PSU/2023 Spring/ModelsComparison/tl_2021_us_state/tl_2021_us_state.shp")
+state_shp <- readOGR(dsn = "./AirQualityResults/tl_2021_us_state/tl_2021_us_state.shp")
 state_shp_sf <- st_as_sf(state_shp)
 
-lat_jie <- nc_open("~/Documents/Princeton/2025/ComplexitySA/monthly_12km_2025-05-27/wrfout_d01_x2017_NEI2017_annual_2017.nc") %>% ncvar_get("XLAT")
-lon_jie <- nc_open("~/Documents/Princeton/2025/ComplexitySA/monthly_12km_2025-05-27/wrfout_d01_x2017_NEI2017_annual_2017.nc") %>% ncvar_get("XLONG")
+lat_jie <- nc_open("./AirQualityResults/wrfout_d01_x2017_NEI2017_annual_2017.nc") %>% ncvar_get("XLAT")
+lon_jie <- nc_open("./AirQualityResults/wrfout_d01_x2017_NEI2017_annual_2017.nc") %>% ncvar_get("XLONG")
 
 resultsInMAP_ref_cty <- st_as_sf(resultsInMAP_ref, coords = c("long", "lat"), crs = st_crs(4269)) %>% 
   group_by(group) %>% summarise(geometry = st_combine(geometry), TotalPM25 = mean(TotalPM25)) %>% st_cast("POLYGON")
@@ -93,7 +93,7 @@ resultsISRM_race2_cty  <- resultsISRM_race2_cty %>% st_drop_geometry()
 names(resultsISRM_race2_cty)[4] <- "fips"
 resultsISRM_race2_cty <- resultsISRM_race2_cty %>% filter(!STATEFP %in% c("02", "15", as.character(57:78))) %>% select(-group)
 
-jie_wrf_nz <- nc_open("~/Documents/PSU/2023 Spring/ModelsComparison/wrfout_d01_x2017_NZ2050_annual_2017.nc") %>% ncvar_get("pm25")
+jie_wrf_nz <- nc_open("./AirQualityResults/wrfout_d01_x2017_NZ2050_annual_2017.nc") %>% ncvar_get("pm25")
 jie_wrf_nz <- data.frame(c(t(jie_wrf_nz)))
 jie_wrf_nz$lat <- c(t(lat_jie))
 jie_wrf_nz$lon <- c(t(lon_jie))
@@ -112,7 +112,7 @@ jie_wrf_nz_cty_na$`TotalPM25` <- jie_wrf_nz[jie_wrf_nz_cty_nns$nn.idx, "TotalPM2
 jie_wrf_nz_cty <- jie_wrf_nz_cty %>% filter(!is.na(TotalPM25)) %>% bind_rows(jie_wrf_nz_cty_na)
 names(jie_wrf_nz_cty)[4] <- "fips"
 
-jie_wrf_ref <- nc_open("~/Documents/PSU/2023 Spring/ModelsComparison/wrfout_d01_x2017_NEI2017_annual_2017.nc") %>% ncvar_get("pm25")
+jie_wrf_ref <- nc_open("./AirQualityResults/wrfout_d01_x2017_NEI2017_annual_2017.nc") %>% ncvar_get("pm25")
 jie_wrf_ref <- data.frame(c(t(jie_wrf_ref)))
 jie_wrf_ref$lat <- c(t(lat_jie))
 jie_wrf_ref$lon <- c(t(lon_jie))
@@ -127,24 +127,8 @@ jie_wrf_ref_cty_nns <- nn2(data = jie_wrf_ref %>% select(lat, lon), query = jie_
 jie_wrf_ref_cty_na$`TotalPM25` <- jie_wrf_ref[jie_wrf_ref_cty_nns$nn.idx, "TotalPM25"]
 jie_wrf_ref_cty <- jie_wrf_ref_cty %>% filter(!is.na(TotalPM25)) %>% bind_rows(jie_wrf_ref_cty_na)
 names(jie_wrf_ref_cty)[4] <- "fips"
-# 
-# jie_wrf_ref50 <- nc_open("~/Documents/PSU/2023 Spring/ModelsComparison/wrfout_d01_x2017_NEI2017_annual_2017.nc") %>% ncvar_get("pm25")
-# jie_wrf_ref50 <- data.frame(c(t(jie_wrf_ref50)))
-# jie_wrf_ref50$lat <- c(t(lat_jie))
-# jie_wrf_ref50$lon <- c(t(lon_jie))
-# names(jie_wrf_ref50)[1] <- "TotalPM25"
-# jie_wrf_ref50_cty <- st_as_sf(jie_wrf_ref50, coords = c("lon", "lat"), crs = st_crs(4269))
-# jie_wrf_ref50_cty <- as_Spatial(jie_wrf_ref50_cty)  
-# jie_wrf_ref50_cty <- sp::over(county_shp, jie_wrf_ref50_cty, fn = mean)  
-# jie_wrf_ref50_cty <- bind_cols(county_shp@data, jie_wrf_ref50_cty)
-# jie_wrf_ref50_cty <- jie_wrf_ref50_cty %>% filter(!STATEFP %in% c("02", "15", as.character(57:78)))
-# jie_wrf_ref50_cty_na <- county_shp@data %>% filter(GEOID %in% na_counties_mc$GEOID)
-# jie_wrf_ref50_cty_nns <- nn2(data = jie_wrf_ref50 %>% select(lat, lon), query = jie_wrf_ref50_cty_na %>% select(INTPTLAT, INTPTLON), k = 1)
-# jie_wrf_ref50_cty_na$`TotalPM25` <- jie_wrf_ref50[jie_wrf_ref50_cty_nns$nn.idx, "TotalPM25"]
-# jie_wrf_ref50_cty <- jie_wrf_ref50_cty %>% filter(!is.na(TotalPM25)) %>% bind_rows(jie_wrf_ref50_cty_na)
-# names(jie_wrf_ref50_cty)[4] <- "fips"
 
-jie_wrf_race2 <- nc_open("~/Documents/PSU/2023 Spring/ModelsComparison/wrfout_county_level_annual_2017_x2017_new_NZ2050.nc") %>% ncvar_get("PM25")
+jie_wrf_race2 <- nc_open("./AirQualityResults/wrfout_county_level_annual_2017_x2017_new_NZ2050.nc") %>% ncvar_get("PM25")
 jie_wrf_race2 <- data.frame(c(t(jie_wrf_race2)))
 jie_wrf_race2$lat <- c(t(lat_jie))
 jie_wrf_race2$lon <- c(t(lon_jie))
@@ -162,22 +146,22 @@ names(jie_wrf_race2_cty)[4] <- "fips"
 
 save(list = c("jie_wrf_ref_cty", "jie_wrf_nz_cty", "jie_wrf_race2_cty", 
               "resultsInMAP_ref_cty", "resultsInMAP_ref50_cty", "resultsInMAP_nz_cty", "resultsInMAP_race2_cty", 
-              "resultsISRM_ref_cty", "resultsISRM_nz_cty"),
-     file = "~/Documents/PSU/2023 Spring/ModelsComparison/model_results_cty_v1.rdata")
+              "resultsISRM_ref_cty", "resultsISRM_nz_cty", "resultsISRM_race2_cty"),
+     file = "./AirQualityResults/model_results_cty_v1.rdata")
 
-# read in the county data again! 
-load(file = "~/Documents/PSU/2023 Spring/ModelsComparison/model_results_cty_v1.rdata")
+# load county results if they are already saved 
+# load(file = "./AirQualityResults/model_results_cty_v1.rdata")
 
 #### 0.2 Health Inpact Assessment (HIA) ####
 
-y0 <- read.csv("~/Documents/PSU/2023 Spring/HIA_County/baseline_mortality_benmap.csv", stringsAsFactors = F)
+y0 <- read.csv("./HIAData/baseline_mortality_benmap.csv", stringsAsFactors = F)
 y0 <- y0 %>% mutate(Column = sprintf("%02d", Column), Row = sprintf("%03d", Row))
 # In 2015, Shannon County (FIPS 46113) is renamed to Oglala Lakota County (46102)
 y0 <- y0 %>% mutate(Row = ifelse(Column == "46" & Row == "113", "102", Row))
 
-pop_2015_for_y0 <- read.csv("~/Documents/PSU/2023 Spring/HIA_County/population_2017_y0_age_groups.csv", stringsAsFactors = F)
+pop_2015_for_y0 <- read.csv("./HIAData/population_2017_y0_age_groups.csv", stringsAsFactors = F)
 pop_2015_for_y0 <- pop_2015_for_y0 %>% mutate(STATE = sprintf("%02d", STATE), COUNTY = sprintf("%03d", COUNTY))
-pop_ssps_for_y0 <- read.csv("~/Documents/PSU/2023 Spring/HIA_County/population_ssps_y0_age_groups.csv", stringsAsFactors = F)
+pop_ssps_for_y0 <- read.csv("./HIAData/population_ssps_y0_age_groups.csv", stringsAsFactors = F)
 pop_ssps_for_y0 <- pop_ssps_for_y0 %>% mutate(STATE = sprintf("%02d", STATE), COUNTY = sprintf("%03d", COUNTY))
 pop_ssps_for_y0 <- pop_ssps_for_y0 %>% mutate(COUNTY = ifelse(STATE == "46" & COUNTY == "113", "102", COUNTY))
 pop_ssps_for_y0 <- pop_ssps_for_y0 %>% mutate(TOT_POP = ifelse(STATE == "46" & COUNTY == "102", 13672, TOT_POP)) # population in 46102 in 2020
@@ -316,7 +300,7 @@ ISRM_race2_HIA <- ISRM_race2_HIA %>% mutate(RR = exp(beta * TotalPM25),
 
 #### 0.3 Some demographic calcs ####
 
-wa_2017 <- read.csv("~/Documents/PSU/2023 Spring/HIA_County/cc-est2019-alldata.csv")
+wa_2017 <- read.csv("./HIAData/cc-est2019-alldata.csv")
 wa_2017 <- wa_2017 %>% filter(YEAR == 10, AGEGRP == 0) %>% 
   mutate(wa = NHWA_MALE + NHWA_FEMALE, ba = NHBA_MALE + NHBA_FEMALE, 
          his = H_MALE + H_FEMALE, other = TOT_POP - wa - ba - his, all_other = ba + his + other, pop = TOT_POP, wa_ratio = wa/pop) %>% 
@@ -325,11 +309,11 @@ wa_2017 <- wa_2017 %>% filter(YEAR == 10, AGEGRP == 0) %>%
 wa_2017 <- wa_2017 %>% mutate(STATE = sprintf("%02d", STATE), COUNTY = sprintf("%03d", COUNTY))
 
 # White alone in 2020 - 2100
-wa_ssps <- read_xlsx("~/Documents/PSU/2023 Spring/HIA_County/SEDAC_georeferenced_county_population_proj_excel files/hauer_county_whiteNH_pop_SSPs.xlsx")
-ba_ssps <- read_xlsx("~/Documents/PSU/2023 Spring/HIA_County/SEDAC_georeferenced_county_population_proj_excel files/hauer_county_blackNH_pop_SSPs.xlsx")
-his_ssps <- read_xlsx("~/Documents/PSU/2023 Spring/HIA_County/SEDAC_georeferenced_county_population_proj_excel files/hauer_county_hispanic_pop_SSPs.xlsx")
-oth_ssps <- read_xlsx("~/Documents/PSU/2023 Spring/HIA_County/SEDAC_georeferenced_county_population_proj_excel files/hauer_county_other_race_pop_SSPs.xlsx")
-tot_ssps <- read_xlsx("~/Documents/PSU/2023 Spring/HIA_County/SEDAC_georeferenced_county_population_proj_excel files/hauer_county_totpop_SSPs.xlsx")
+wa_ssps <- read_xlsx("./HIAData/SEDAC_georeferenced_county_population_proj_excel files/hauer_county_whiteNH_pop_SSPs.xlsx")
+ba_ssps <- read_xlsx("./HIAData/SEDAC_georeferenced_county_population_proj_excel files/hauer_county_blackNH_pop_SSPs.xlsx")
+his_ssps <- read_xlsx("./HIAData/SEDAC_georeferenced_county_population_proj_excel files/hauer_county_hispanic_pop_SSPs.xlsx")
+oth_ssps <- read_xlsx("./HIAData/SEDAC_georeferenced_county_population_proj_excel files/hauer_county_other_race_pop_SSPs.xlsx")
+tot_ssps <- read_xlsx("./HIAData/SEDAC_georeferenced_county_population_proj_excel files/hauer_county_totpop_SSPs.xlsx")
 
 wa_ssps <- wa_ssps[, c(1, 2, 4, 6, 19:103)]
 wa_ssps <- wa_ssps %>% gather(key = sspyear, value = wa, -STATEFP10, -COUNTYFP10, -GEOID10, -NAMELSAD10)
@@ -362,8 +346,9 @@ wa_ssps <- data.frame(wa_ssps[, c(1:4, 6, 7, 5)],
                       pop = tot_ssps$pop)
 wa_ssps$wa_ratio <- wa_ssps$wa / wa_ssps$pop
 
+#### 1. Figure 1. Drawn in Keynote and PowerPoint ####
 
-#### 1. Figure 2a. National PM2.5-attributable deaths ####
+#### 2.1. Figure 2a. National PM2.5-attributable deaths ####
 
 deaths_InMAP_ref50 <- sum(InMAP_ref50_HIA$deaths)
 deaths_InMAP_nz <- sum(InMAP_nz_HIA$deaths) 
@@ -396,7 +381,6 @@ DA_mc[2, ] <- data.frame(ref50 = deaths_InMAP_ref50,
 )
 
 rownames(DA_mc) <- c("SSP3", "SSP5")
-# DA_mc <- DA_mc %>% gather(key = "component", value = "value", -scenario)
 
 deaths_InMAP_ref <- sum(InMAP_ref_HIA$deaths)
 deaths_InMAP_ref50 <- sum(InMAP_ref50_HIA$deaths)
@@ -527,15 +511,283 @@ p2 <- ggplot() +
     )
   ) 
 
-# ggsave("~/Documents/PSU/2023 Spring/ModelsComparison/Viz_v1/Fig2.png", p2, width = 9, height = 7)
-ggsave("~/Documents/PSU/2023 Spring/ModelsComparison/Viz_Maintext_v1/Fig2.png", p2, width = 11, height = 4.5)
+#### 2.2 Figures 2b and 2c. Disparities #### 
+# Detailed codes for Figures 2b and 2c are in Figures2bc.R
+# Results used for Figures 2b and 2c are in data set SI. 
+pop_all_2017_for_y0 <- read.csv("~/HIAData/population_all_2017_y0_age_groups.csv", stringsAsFactors = F)
+pop_ssp22050_for_y0 <- read.csv("~/HIAData/population_ssp2_2050_y0.csv", stringsAsFactors = F)
+pop_ssp32050_for_y0 <- read.csv("~/HIAData/population_ssp3_2050_y0.csv", stringsAsFactors = F)
+pop_ssp52050_for_y0 <- read.csv("~/HIAData/population_ssp5_2050_y0.csv", stringsAsFactors = F)
+
+pop_all_2017_for_y0 <- pop_all_2017_for_y0 %>% 
+  mutate(STATE = sprintf("%02d", STATE), COUNTY = sprintf("%03d", COUNTY))
+pop_all_2017_for_y0 <- pop_all_2017_for_y0 %>% mutate(Other = AA + IA)
+names(pop_all_2017_for_y0)[7:9] <- c("WNH", "Hispanic", "BNH")
+pop_ssp22050_for_y0 <- pop_ssp22050_for_y0 %>% 
+  mutate(STATE = sprintf("%02d", STATE), COUNTY = sprintf("%03d", COUNTY), GEOID10 = sprintf("%05d", GEOID10))
+pop_ssp32050_for_y0 <- pop_ssp32050_for_y0 %>% 
+  mutate(STATE = sprintf("%02d", STATE), COUNTY = sprintf("%03d", COUNTY), GEOID10 = sprintf("%05d", GEOID10))
+pop_ssp52050_for_y0 <- pop_ssp52050_for_y0 %>% 
+  mutate(STATE = sprintf("%02d", STATE), COUNTY = sprintf("%03d", COUNTY), GEOID10 = sprintf("%05d", GEOID10))
+
+draw_key_multi_points <- function(data, params, size) {
+  col <- if (!is.null(data$colour)) data$colour[1] else "black"
+  grid::pointsGrob(
+    x    = grid::unit(c(0.25, 0.50, 0.75), "npc"),
+    y    = grid::unit(rep(0.50, 3), "npc"),
+    pch  = c(1, 2, 19),                    # circle, triangle, square
+    size = grid::unit(1.8, "mm"),
+    gp   = grid::gpar(col = col)
+  )
+}
 
 
-#### Some space for the other 2 panels of figure 2 #### 
+ribbon_exposure <- data.frame(key = -2:3, 
+                              max = c(7.84, 5.07, 4.52, 4.53, 3.56, 6.59), # for Black
+                              min = c(6.57, 4.38, 3.93, 3.94, 3.38, 6.22)) # for White
 
+fig_2b <-
+  ggplot() +
+  annotate(geom = "rect", xmin = -0.4, ymin = 0, xmax = 3.5, ymax = 10, fill = "grey", alpha = .2) +
+  geom_ribbon(data = ribbon_exposure, mapping = aes(x = key, ymax = max, ymin = min), 
+              fill = "linen") +
+  geom_point(data = ribbon_exposure[3:6, ], mapping = aes(x = key, y = max, color = "ba", shape = "nz"), size = 3, key_glyph = draw_key_multi_points) +
+  geom_point(data = ribbon_exposure[3:6, ], mapping = aes(x = key, y = min, color = "wa", shape = "nz"), size = 3, key_glyph = draw_key_multi_points) +
+  geom_line(data = ribbon_exposure[3:6, ], mapping = aes(x = key, y = max, color = "ba"), size = 1, show.legend = F) +
+  geom_line(data = ribbon_exposure[3:6, ], mapping = aes(x = key, y = min, color = "wa"), size = 1, show.legend = F) +
+  labs(x = "", y = "&mu;g/m<sup>3</sup>", 
+       title = "<b>b) National average pollution disparity: PM<sub>2.5</sub> exposure for <br>the Black and the White populations</b>",
+       color = "2050 Net-Zero scenarios: ", shape = "", fill = "") +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        text = element_text(size = 16),
+        plot.title = element_markdown(), axis.text.x = element_markdown(size = 13),
+        axis.title.x = element_markdown(), axis.title.y = element_markdown(),
+        panel.background = element_blank(), legend.title = element_blank(), 
+        legend.key = element_rect(fill = "transparent", color = NA), 
+        legend.box.background = element_rect(fill = "transparent", color = "black"), legend.background = element_rect(fill = "transparent"),
+        legend.key.width = grid::unit(2.2, "lines"),
+        legend.position = c(.2, .15), plot.margin = margin(5.5, 5.5, 55, 5.5)
+  ) +
+  coord_cartesian(clip = "off") + 
+  scale_x_continuous(limits = c(-2.5, 3.5), expand = c(0, 0), breaks = -2:3, 
+                     labels = c("", "", "Energy<br>decarbonization", "Socioeconomic<br>factors", 
+                                "Emission<br>downscaling", "Atmospheric<br>processses")) + 
+  scale_y_continuous(limits = c(0, 10), expand = c(0, 0)) +
+  scale_color_manual(labels = c("Exposure for the Black population", 
+                                "Exposure for the White population"), 
+                     values = c("grey30", "brown4")) +
+  # Black points
+  geom_point(aes(x = -2, y = 7.84, shape = "ref"), color = "grey30", size = 3, stroke = 1) +
+  annotate("segment", x = -2, y = 7.84, xend = -1, yend = 5.07, color = "grey30", linetype = "dashed") +
+  geom_point(aes(x = -1, y = 5.07, shape = "ref50"), color = "grey30", size = 3, stroke = 1) +
+  annotate("segment", x = -1, y = 5.07, xend = 0, yend = 4.52, color = "grey30", linetype = "dashed") +
+  annotate("point", x = 0, y = 4.52, color = "grey30", size = 3) +
+  # White points
+  geom_point(aes(x = -2, y = 6.57, shape = "ref"), color = "brown4", size = 3, stroke = 1) +
+  annotate("segment", x = -2, y = 6.57, xend = -1, yend = 4.38, color = "brown4", linetype = "dashed") +
+  geom_point(aes(x = -1, y = 4.38, shape = "ref50"), color = "brown4", size = 3, stroke = 1) +
+  annotate("segment", x = -1, y = 4.38, xend = 0, yend = 3.93, color = "brown4", linetype = "dashed") +
+  annotate("point", x = 0, y = 3.93, color = "brown4", size = 3) + 
+  scale_shape_manual(values = c("ref" = 1, "ref50" = 2, "nz" = 19), 
+                     labels = c("ref" = "2017", "ref50" = "2050 Reference", "nz" = "2050 Net-Zero"), 
+                     limits = c("ref", "ref50", "nz"), guide = "none") +
+  geom_richtext(label = "<b>2017</b>", aes(x = -2, y = 9), label.color = NA, size = 5) + 
+  geom_richtext(label = "<b>2050 Reference</b>", aes(x = -1, y = 9), label.color = NA, size = 5) + 
+  geom_richtext(label = "<b>2050 Net-Zero</b>", aes(x = 1.5, y = 9), label.color = NA, fill = NA, size = 5) + 
+  annotate("text", x = -2, y = 5.9, label = "All benchmark") + 
+  annotate("text", x = -1, y = 3.5, label = "All benchmark") + 
+  annotate("text", x = 0, y = 3.5, label = "All benchmark") + 
+  annotate("text", x = 1, y = 5.1, label = "SSP3") +
+  annotate("text", x = 2, y = 2.7, label = "Equity-oriented") + 
+  annotate("text", x = 3, y = 7.3, label = "WRF-Chem") +
+  annotation_custom(
+    grob = segmentsGrob(
+      x0 = unit(4/12 + .01, "npc"), y0 = unit(-0.125, "npc"),  
+      x1 = unit(4/12 + .01, "npc"), y1 = unit(-0.15, "npc"),  
+      gp = gpar(col = "black", lwd = 2)
+    )
+  ) +
+  annotation_custom(
+    grob = segmentsGrob(
+      x0 = unit(4/12 + .01, "npc"), y0 = unit(-0.15, "npc"),  
+      x1 = unit(8/12 - .01, "npc"), y1 = unit(-0.15, "npc"),  
+      gp = gpar(col = "black", lwd = 2)
+    )
+  ) +
+  annotation_custom(
+    grob = segmentsGrob(
+      x0 = unit(8/12 - .01, "npc"), y0 = unit(-0.125, "npc"),  
+      x1 = unit(8/12 - .01, "npc"), y1 = unit(-0.15, "npc"),  
+      gp = gpar(col = "black", lwd = 2)
+    )
+  ) +
+  annotation_custom(
+    grob = segmentsGrob(
+      x0 = unit(8/12 + .01, "npc"), y0 = unit(-0.125, "npc"),  
+      x1 = unit(8/12 + .01, "npc"), y1 = unit(-0.15, "npc"),  
+      gp = gpar(col = "black", lwd = 2)
+    )
+  ) +
+  annotation_custom(
+    grob = segmentsGrob(
+      x0 = unit(8/12 + .01, "npc"), y0 = unit(-0.15, "npc"),  
+      x1 = unit(12/12 - .01, "npc"), y1 = unit(-0.15, "npc"),  
+      gp = gpar(col = "black", lwd = 2)
+    )
+  ) +
+  annotation_custom(
+    grob = segmentsGrob(
+      x0 = unit(12/12 - .01, "npc"), y0 = unit(-0.125, "npc"),  
+      x1 = unit(12/12 - .01, "npc"), y1 = unit(-0.15, "npc"),  
+      gp = gpar(col = "black", lwd = 2)
+    )
+  ) +
+  annotation_custom(
+    grob = textGrob(
+      x = unit(6/12, "npc"), y = unit(-0.225, "npc"),  
+      gp = gpar(lineheight = 0.8, fontsize = 13), 
+      label = "Macro-scale\nfactors"
+    )
+  ) +
+  annotation_custom(
+    grob = textGrob(
+      x = unit(10/12, "npc"), y = unit(-0.225, "npc"),  
+      gp = gpar(lineheight = 0.8, fontsize = 13), 
+      label = "Micro-scale\nfactors"
+    )
+  ) +
+  annotate("segment", x = 0.5, xend = 0.7, y = 4.25, yend = 2.5, color = "chocolate4") + 
+  annotate("text", x = 0.7, y = 2, label = "Disparity", size = 6, color = "chocolate4") 
+
+#### Variant for dr
+
+ribbon_dr <- data.frame(key = -2:5, 
+                        max = c(291, 298, 267, 275, 223, 409, 440, 1360), # for Black
+                        min = c(395, 276, 249, 258, 227, 413, 434, 454)) # for White
+
+fig_2c <-
+  ggplot() +
+  annotate(geom = "rect", xmin = -0.4, ymin = 0, xmax = 5.5, ymax = 1500, fill = "grey", alpha = .2) +
+  geom_ribbon(data = ribbon_dr, mapping = aes(x = key, ymax = max, ymin = min), 
+              fill = "linen") +
+  geom_point(data = ribbon_dr[3:8, ], mapping = aes(x = key, y = max, color = "ba", shape = "nz"), size = 2, key_glyph = draw_key_multi_points) +
+  geom_point(data = ribbon_dr[3:8, ], mapping = aes(x = key, y = min, color = "wa", shape = "nz"), size = 2, key_glyph = draw_key_multi_points) +
+  geom_line(data = ribbon_dr[3:8, ], mapping = aes(x = key, y = max, color = "ba"), size = .5, show.legend = F) +
+  geom_line(data = ribbon_dr[3:8, ], mapping = aes(x = key, y = min, color = "wa"), size = .5, show.legend = F) +
+  labs(x = "", y = "Annual deaths per million", 
+       title = "<b>c) National average health disparity: PM<sub>2.5</sub>-attributable death rates for <br>the Black and the White populations</b>",
+       color = "2050 Net-Zero scenarios: ", shape = "", fill = "") +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        text = element_text(size = 16),
+        plot.title = element_markdown(), axis.text.x = element_markdown(size = 13),
+        axis.title.x = element_markdown(), axis.title.y = element_markdown(),
+        panel.background = element_blank(), legend.title = element_blank(), 
+        legend.key = element_rect(fill = "transparent", color = NA), 
+        legend.box.background = element_rect(fill = "transparent", color = "black"), legend.background = element_rect(fill = "transparent"),
+        legend.key.width = grid::unit(2.2, "lines"),
+        legend.position = c(.2, .65), plot.margin = margin(5.5, 5.5, 55, 5.5)
+  ) +
+  coord_cartesian(clip = "off") + 
+  scale_x_continuous(limits = c(-2.5, 5.5), expand = c(0, 0), breaks = -2:5, 
+                     labels = c("", "", "Energy<br>decarbonization", "Socioeconomic<br>factors", 
+                                "Emission<br>downscaling", "Atmospheric<br>processses", 
+                                "Baseline<br>mortality rates", "Relative<br>risks")) + 
+  scale_y_continuous(limits = c(0, 1500), expand = c(0, 0)) +
+  scale_color_manual(labels = c("Death rates for the Black population", 
+                                "Death rates for the White population"), 
+                     values = c("grey30", "brown4")) +
+  # Black points
+  geom_point(aes(x = -2, y = 291, shape = "ref"), color = "grey30", size = 3, stroke = 1) +
+  annotate("segment", x = -2, y = 291, xend = -1, yend = 298, color = "grey30", linetype = "dashed") +
+  geom_point(aes(x = -1, y = 298, shape = "ref50"), color = "grey30", size = 3, stroke = 1) +
+  annotate("segment", x = -1, y = 298, xend = 0, yend = 267, color = "grey30", linetype = "dashed") +
+  annotate("point", x = 0, y = 267, color = "grey30", size = 3) +
+  # White points
+  geom_point(aes(x = -2, y = 395, shape = "ref"), color = "brown4", size = 3, stroke = 1) +
+  annotate("segment", x = -2, y = 395, xend = -1, yend = 276, color = "brown4", linetype = "dashed") +
+  geom_point(aes(x = -1, y = 276, shape = "ref50"), color = "brown4", size = 3, stroke = 1) +
+  annotate("segment", x = -1, y = 276, xend = 0, yend = 249, color = "brown4", linetype = "dashed") +
+  annotate("point", x = 0, y = 249, color = "brown4", size = 3) + 
+  scale_shape_manual(values = c("ref" = 1, "ref50" = 2, "nz" = 19), 
+                     labels = c("ref" = "2017", "ref50" = "2050 Reference", "nz" = "2050 Net-Zero"), 
+                     limits = c("ref", "ref50", "nz"), guide = "none") +
+  geom_richtext(label = "<b>2017</b>", aes(x = -2, y = 1350), label.color = NA, size = 5) + 
+  geom_richtext(label = "<b>2050 Reference</b>", aes(x = -1, y = 1350), label.color = NA, size = 5) + 
+  geom_richtext(label = "<b>2050 Net-Zero</b>", aes(x = 2.5, y = 1350), label.color = NA, fill = NA, size = 5) + 
+  annotate("text", x = -2, y = 225, label = "All benchmark") + 
+  annotate("text", x = -1, y = 175, label = "All benchmark") +   
+  annotate("text", x = 0, y = 150, label = "All benchmark") + 
+  annotate("text", x = 1, y = 400, label = "SSP5") + 
+  annotate("text", x = 2, y = 100, label = "Equity-oriented") + 
+  annotate("text", x = 2.9, y = 550, label = "WRF-Chem") + 
+  annotate("text", x = 3.7, y = 650, label = "Race-specific") + 
+  annotate("text", x = 4.5, y = 1400, label = "Race-specific") + 
+  annotation_custom(
+    grob = segmentsGrob(
+      x0 = unit(4/16 + .01, "npc"), y0 = unit(-0.125, "npc"),  
+      x1 = unit(4/16 + .01, "npc"), y1 = unit(-0.15, "npc"),  
+      gp = gpar(col = "black", lwd = 2)
+    )
+  ) +
+  annotation_custom(
+    grob = segmentsGrob(
+      x0 = unit(4/16 + .01, "npc"), y0 = unit(-0.15, "npc"),  
+      x1 = unit(8/16 - .01, "npc"), y1 = unit(-0.15, "npc"),  
+      gp = gpar(col = "black", lwd = 2)
+    )
+  ) +
+  annotation_custom(
+    grob = segmentsGrob(
+      x0 = unit(8/16 - .01, "npc"), y0 = unit(-0.125, "npc"),  
+      x1 = unit(8/16 - .01, "npc"), y1 = unit(-0.15, "npc"),  
+      gp = gpar(col = "black", lwd = 2)
+    )
+  ) +
+  annotation_custom(
+    grob = segmentsGrob(
+      x0 = unit(8/16 + .01, "npc"), y0 = unit(-0.125, "npc"),  
+      x1 = unit(8/16 + .01, "npc"), y1 = unit(-0.15, "npc"),  
+      gp = gpar(col = "black", lwd = 2)
+    )
+  ) +
+  annotation_custom(
+    grob = segmentsGrob(
+      x0 = unit(8/16 + .01, "npc"), y0 = unit(-0.15, "npc"),  
+      x1 = unit(16/16 - .01, "npc"), y1 = unit(-0.15, "npc"),  
+      gp = gpar(col = "black", lwd = 2)
+    )
+  ) +
+  annotation_custom(
+    grob = segmentsGrob(
+      x0 = unit(16/16 - .01, "npc"), y0 = unit(-0.125, "npc"),  
+      x1 = unit(16/16 - .01, "npc"), y1 = unit(-0.15, "npc"),  
+      gp = gpar(col = "black", lwd = 2)
+    )
+  ) +
+  annotation_custom(
+    grob = textGrob(
+      x = unit(6/16, "npc"), y = unit(-0.225, "npc"),  
+      gp = gpar(lineheight = 0.8, fontsize = 13), 
+      label = "Macro-scale\nfactors"
+    )
+  ) +
+  annotation_custom(
+    grob = textGrob(
+      x = unit(12/16, "npc"), y = unit(-0.225, "npc"),  
+      gp = gpar(lineheight = 0.8, fontsize = 13), 
+      label = "Micro-scale\nfactors"
+    )
+  ) +
+  annotate("text", x = 4.6, y = 600, label = "Disparity", size = 6, color = "chocolate4") 
+
+fig2 <- ggarrange(p2, fig_2b, fig_2c, NULL,
+                  nrow = 4, widths = 11, heights = c(4.5, 5, 5, .1), align = "v")
+ggsave(filename = "./Viz_Maintext_v1/Fig2.png", width = 11, height = 14.6, plot = fig2)
 
 #### 3. Figure 3 ####
-#### first row
+#### first row: maps
 
 resultsInMAP_d <- resultsInMAP_nz_cty
 resultsInMAP_d$TotalPM25 <- resultsInMAP_d$TotalPM25 - resultsInMAP_ref_cty$TotalPM25
@@ -624,7 +876,7 @@ p3_row1 <- ggarrange(p3a, p3b, p3c, nrow = 1, common.legend = T, legend = "botto
     )
   )
 
-#### second row
+#### second row: scatter plots
 models_ref_cty <- bind_rows(jie_wrf_ref_cty %>% select(fips, TotalPM25), 
                             resultsInMAP_ref_cty %>% select(fips, TotalPM25),
                             resultsISRM_ref_cty %>% select(fips, TotalPM25))
@@ -704,7 +956,7 @@ p3f <- ggplot() +
 p3_row2 <- ggarrange(p3d, NULL, p3e, NULL, p3f, NULL, nrow = 1, widths = c(4, .1, 4, .1, 4, .1), heights = 4.5)
 
 p3 <- ggarrange(p3_row1, NULL, p3_row2, nrow = 3, widths = 15, heights = c(5, 0.05, 5.5))
-ggsave("~/Documents/PSU/2023 Spring/ModelsComparison/Viz_v1/Fig3.png", p3, width = 15, height = 10)
+ggsave("./Viz_Maintext_v1/Fig3.png", p3, width = 15, height = 10)
 
 #### 4. Figure 4 national and NY distributions ####
 
@@ -778,7 +1030,7 @@ fig_4a <- ggplot() +
   annotate("text", x = 4.4, y = 7, label = "N = 195 M", color = "red3")
 
 
-dt_fig_4b <- bind_rows(box_ref %>% filter(STATEFP == "36") %>% mutate(scenario = "ref17"), 
+dt_fig_4b <- bind_rows(box_ref %>% filter(STATEFP == "36") %>% mutate(scenario = "ref17"),  # NY state
                        box_ref50 %>% filter(STATEFP == "36") %>% mutate(scenario = "ref50"), 
                        box_nz %>% filter(STATEFP == "36") %>% mutate(scenario = "nz"), 
                        box_race2 %>% filter(STATEFP == "36") %>% mutate(scenario = "equity"))
@@ -846,7 +1098,7 @@ fig_4c <- ggplot() +
 fig4 <- ggarrange(ggarrange(fig_4a, NULL, nrow = 1, widths = c(10, 0.5), heights = 4), 
                   ggarrange(fig_4b, NULL, fig_4c, NULL, nrow = 1, widths = c(5, .25, 5, .25), heights = c(4.5)), 
                   nrow = 2, heights = c(4, 4.5), widths = c(10.5))
-ggsave(filename = "~/Documents/PSU/2023 Spring/ModelsComparison/Viz_v1/Fig4.png", plot = fig4, 
+ggsave(filename = "./Viz_Maintext_v1/Fig4.png", plot = fig4, 
        width = 10, height = 8.5)
 
 #### Figure 5. Impact of paras ####
@@ -863,7 +1115,6 @@ dt_fig5a <- data.frame(c = seq(0, 10, by = 0.1) %>% rep(3),
 fig_5a <-
   ggplot(data = dt_fig5a) + 
   geom_path(mapping = aes(x = c, y = rr, color = race), size = 1) + 
-  # geom_ribbon(mapping = aes(x = c, ymin = rr_lower, ymax = rr_upper, fill = race), alpha = .8) +
   theme_bw() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         text = element_text(size = 16), axis.ticks.x = element_blank(), 
@@ -952,9 +1203,6 @@ dt_fig5 <- data.frame(
   dr_upper = c(327, 343, 282, 351, 384, 949,  
                288, 302, 248, 285, 311, 773)
 )
-# dt_fig5$scenario <- factor(dt_fig5$scenario, 
-#                            levels = rev(c("Uniform-Uniform NZ", "Different-Uniform NZ", "Different-Different NZ", 
-#                                           "Uniform-Uniform Equity", "Different-Uniform Equity", "Different-Different Equity")))
 dt_fig5$scenario <- c(rep(7:5, 2), rep(3:1, 2))
 dt_fig5$ses <- factor(dt_fig5$ses, levels = c("Non-White", "White"))
 
@@ -986,7 +1234,7 @@ fig5 <- gridExtra::grid.arrange(
   gridExtra::grid.arrange(fig_5c, NULL, ncol = 2, widths = c(12, .15), heights = 5),
   nrow = 2, widths = 12.15, heights = c(5, 5)
 )
-ggsave(filename = "~/Documents/PSU/2023 Spring/ModelsComparison/Viz_v1/Fig5.png", plot = fig5, 
+ggsave(filename = "./Viz_Maintext_v1/Fig5.png", plot = fig5, 
        width = 12.15, height = 10)
 
 
